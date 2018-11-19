@@ -1,7 +1,7 @@
 #' login UI module
 #'
 #' Shiny UI Module for use with \link{login}
-#' 
+#'
 #' Call via \code{loginUI("your_id")}
 #'
 #' @param id Shiny id
@@ -11,25 +11,29 @@
 #' @author Paul Campbell, \email{pacampbell91@gmail.com}
 #'
 #' @export
-loginUI <- function(id) {
+loginUI <- function(id,
+                    user = "User Name",
+                    password = "Password",
+                    error = "Invalid username or password!",
+                    loginButton = "Log in") {
   ns <- shiny::NS(id)
 
   shiny::div(id = ns("panel"), style = "width: 500px; max-width: 100%; margin: 0 auto; padding: 20px;",
       shiny::wellPanel(
-        shiny::tags$h2("Please log in", class = "text-center", style = "padding-top: 0;"),
+     #   shiny::tags$h2("Please log in", class = "text-center", style = "padding-top: 0;"),
 
-        shiny::textInput(ns("user_name"), shiny::tagList(shiny::icon("user"), "User Name")),
+        shiny::textInput(ns("user_name"), shiny::tagList(shiny::icon("user"), user)),
 
-        shiny::passwordInput(ns("password"), shiny::tagList(shiny::icon("unlock-alt"), "Password")),
+        shiny::passwordInput(ns("password"), shiny::tagList(shiny::icon("unlock-alt"), password)),
 
         shiny::div(
           style = "text-align: center;",
-          shiny::actionButton(ns("button"), "Log in", class = "btn-primary", style = "color: white;")
+          shiny::actionButton(ns("button"), loginButton, class = "btn-primary", style = "color: white;")
         ),
 
         shinyjs::hidden(
           shiny::div(id = ns("error"),
-                     shiny::tags$p("Invalid username or password!",
+                     shiny::tags$p(error,
                      style = "color: red; font-weight: bold; padding-top: 5px;", class = "text-center"))
         )
       )
@@ -52,19 +56,19 @@ loginUI <- function(id) {
 #' @param algo if passwords are hashed, what hashing algorithm was used? options are "md5", "sha1", "crc32", "sha256", "sha512", "xxhash32", "xxhash64", "murmur32".
 #' @param log_out [reactive] supply the returned reactive from \link{logout} here to trigger a user logout
 #'
-#' @return The module will return a reactive 2 element list to your main application. 
+#' @return The module will return a reactive 2 element list to your main application.
 #'   First element \code{user_auth} is a boolean inditcating whether there has been
 #'   a successful login or not. Second element \code{info} will be the data frame provided
-#'   to the function, filtered to the row matching the succesfully logged in username. 
+#'   to the function, filtered to the row matching the succesfully logged in username.
 #'   When \code{user_auth} is FALSE \code{info} is NULL.
 #'
 #' @author Paul Campbell, \email{pacampbell91@gmail.com}
-#' 
+#'
 #' @importFrom rlang :=
-#' 
+#'
 #' @examples
 #' \dontrun{
-#'   user_credentials <- shiny::callModule(login, "login", 
+#'   user_credentials <- shiny::callModule(login, "login",
 #'                                         data = user_base,
 #'                                         user_col = user,
 #'                                         pwd_col = password,
@@ -73,9 +77,9 @@ loginUI <- function(id) {
 #'
 #' @export
 login <- function(input, output, session, data, user_col, pwd_col,
-                  hashed = FALSE, algo = c("md5", "sha1", "crc32", "sha256", "sha512", "xxhash32", "xxhash64", "murmur32"), 
+                  hashed = FALSE, algo = c("md5", "sha1", "crc32", "sha256", "sha512", "xxhash32", "xxhash64", "murmur32"),
                   log_out = NULL) {
-  
+
   algo <- match.arg(algo, several.ok = FALSE)
 
   credentials <- shiny::reactiveValues(user_auth = FALSE, info = NULL)
@@ -91,25 +95,25 @@ login <- function(input, output, session, data, user_col, pwd_col,
 
   users <- dplyr::enquo(user_col)
   pwds <- dplyr::enquo(pwd_col)
-  
+
   # ensure all text columns are character class
   data <- dplyr::mutate_if(data, is.factor, as.character)
 
   shiny::observeEvent(input$button, {
-    
+
     # check for match of input username to username column in data
     row_username <- which(dplyr::pull(data, !! users) == input$user_name)
 
     if(hashed) {
       # check for match of hashed input password to hashed password column in data
       row_password <- which(dplyr::pull(data, !! pwds) == digest::digest(input$password, algo = algo))
-      
+
     } else {
       # if passwords are not hashed, hash them with md5 and do the same with the input password
       data <- dplyr::mutate(data,  !! pwds := sapply(!! pwds, digest::digest))
       row_password <- which(dplyr::pull(data, !! pwds) == digest::digest(input$password))
     }
-    
+
     # if user name row and password name row are same, credentials are valid
     if (length(row_username) == 1 &&
         length(row_password) >= 1 &&  # more than one user may have same pw

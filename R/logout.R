@@ -1,7 +1,7 @@
 #' logout UI module
 #'
 #' Shiny UI Module for use with \link{logout}
-#' 
+#'
 #' Call via \code{logoutUI("your_id")}
 #'
 #' @param id Shiny id
@@ -11,11 +11,11 @@
 #' @author Paul Campbell, \email{pacampbell91@gmail.com}
 #'
 #' @export
-logoutUI <- function(id) {
+logoutUI <- function(id, logout = "Log out") {
   ns <- shiny::NS(id)
 
   shinyjs::hidden(
-    shiny::actionButton(ns("button"), "Log out", class = "btn-danger", style = "color: white;")
+    shiny::actionButton(ns("button"), logout, class = "btn-danger", style = "color: white;")
   )
 }
 
@@ -28,17 +28,17 @@ logoutUI <- function(id) {
 #' @param input shiny input
 #' @param output shiny output
 #' @param session shiny session
-#' @param active [reactive] supply the returned \code{user_auth} boolean reactive from \link{login} 
+#' @param active [reactive] supply the returned \code{user_auth} boolean reactive from \link{login}
 #'   here to hide/show the logout button
 #'
-#' @return The reactive output of this module should be supplied as the \code{log_out} argument to the 
+#' @return The reactive output of this module should be supplied as the \code{log_out} argument to the
 #'   \link{login} module to trigger the logout process
 #'
 #' @author Paul Campbell, \email{pacampbell91@gmail.com}
-#' 
+#'
 #' @examples
 #' \dontrun{
-#'   logout_init <- shiny::callModule(logout, "logout", 
+#'   logout_init <- shiny::callModule(logout, "logout",
 #'                                    active = reactive(user_credentials()$user_auth))
 #' }
 #'
